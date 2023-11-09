@@ -36,15 +36,21 @@ class StreamThread(threading.Thread):
                                      'Authorization': f'Bearer {github_token}'})
         self.last_etag = ''
         self.poll_rate_limit = 60
+        self.timeout = 1
 
     @staticmethod
     def get_last_etag(res_headers):
-        etag = res_headers.get('ETag', '')
+        etag = res_headers['ETag']
         return etag.lstrip('/W')
 
     def handle_connection_error(self, resposne: requests.Response):
-        self.session.close()
-        raise ConnectionError(resposne)
+        if resposne.status_code == 403:
+            # reached the limit of API connections
+            self.timeout *= 2
+            time.sleep(self.timeout)
+        else:
+            self.session.close()
+            raise ConnectionError(resposne)
 
     def get_events(self, url: str) -> List:
         res = self.session.get(url, headers={'if-none-match': self.last_etag})
@@ -58,7 +64,9 @@ class StreamThread(threading.Thread):
         if res.status_code >= 400:
             # API error
             self.handle_connection_error(res)
+            return []
 
+        self.timeout = 1  # no error --> reset timeout
         return res.json()
 
     def filter_events(self, data: List):
