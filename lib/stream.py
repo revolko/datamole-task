@@ -32,15 +32,17 @@ class StreamThread(threading.Thread):
         self.session = requests.Session()
 
         github_token = os.getenv('GITHUB_TOKEN')
-        self.session.headers.update({'Accept': 'application/vnd.github+json',
-                                     'Authorization': f'Bearer {github_token}'})
+        if github_token:
+            self.session.headers.update({'Authorization': f'Bearer {github_token}'})
+
+        self.session.headers.update({'Accept': 'application/vnd.github+json'})
         self.last_etag = ''
         self.poll_rate_limit = 60
         self.timeout = 1
 
     @staticmethod
     def get_last_etag(res_headers):
-        etag = res_headers['ETag']
+        etag = res_headers.get('ETag', '')
         return etag.lstrip('/W')
 
     def handle_connection_error(self, resposne: requests.Response):
