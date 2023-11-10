@@ -4,7 +4,7 @@ from lib import metrics, stream
 
 app = Flask(__name__)
 events = {'WatchEvent': [], 'PullRequestEvent': [], 'IssuesEvent': []}
-stream.StreamThread(events).start()  # should make sure that deamon thread closes all I/O --> checkout atexit
+stream.StreamThread(events).start()
 
 
 @app.route("/pull_requests/<int:repo_id>", methods=['GET'])
@@ -19,6 +19,9 @@ def pull_requests(repo_id: int):
 
 @app.route("/events", methods=['GET'])
 def group_events():
-    # TODO: take request.args.get('offset') into a consideration it will require to make a copy of events
     global events
-    return {type: len(es) for type, es in events.items()}, 200
+    events_copy = {e_type: es.copy() for e_type, es in events.items()}
+
+    offset = int(request.args.get('offset', '0'))
+    filtered_events = metrics.get_offset_events(events_copy, offset)
+    return {event_type: len(event_list) for event_type, event_list in filtered_events.items()}, 200
