@@ -27,10 +27,12 @@ in `Dockerfile`.
 
 # HOW IT WORKS
 
-Briefly, the Flask service provides REST APIs as specified in the assignment. In addition to the 
-service, a thread is spawned which polls the events from the GitHub API. Regarding events polling,
-the GitHub API restrics the number of requests for each user (based on IP or token). That means that
-it is not possible to obtain all events ever created.
+Briefly, the Flask service provides REST APIs as specified in the assignment and bonus endpoint
+which tracks the repositories that were made public. The track of public repositories is possible
+thanks to the `PublicEvent` which is created every time the private repository is made public. 
+In addition to the service, a thread is spawned which polls the events from the GitHub API.
+Regarding events polling, the GitHub API restrics the number of requests for each user (based on IP
+or token). That means that it is not possible to obtain all events ever created.
 
 It is important to note that each poll for events consists of 3 requests. This is because the result
 is paginated and the API limits page size to 100. At each time, the API provides 300 records, thus

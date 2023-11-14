@@ -57,3 +57,14 @@ def get_offset_events(events: dict, offset: int) -> dict:
         events[event_type] = filter_events(events[event_type], events_len[event_type])
 
     return events
+
+
+def get_public_repositories(events: dict) -> List:
+    """
+    Get repositories which were made public
+    """
+
+    public_events = events['PublicEvent']
+    events_len = len(public_events)
+
+    return [public_events[i]['repo']['name'] for i in range(events_len)]

@@ -3,7 +3,7 @@ from flask import Flask, request
 from lib import metrics, stream
 
 app = Flask(__name__)
-events = {'WatchEvent': [], 'PullRequestEvent': [], 'IssuesEvent': []}
+events = {'WatchEvent': [], 'PullRequestEvent': [], 'IssuesEvent': [], 'PublicEvent': []}
 stream.StreamThread(events).start()
 
 
@@ -23,3 +23,10 @@ def group_events():
     offset = int(request.args.get('offset', '0'))
     filtered_events = metrics.get_offset_events(events, offset)
     return {event_type: len(event_list) for event_type, event_list in filtered_events.items()}, 200
+
+
+@app.route("/public_repositories")
+def public_repositories():
+    global events
+
+    return {'public_repositories': metrics.get_public_repositories(events)}, 200

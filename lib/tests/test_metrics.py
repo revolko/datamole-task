@@ -2,7 +2,7 @@ from unittest import TestCase
 from unittest.mock import patch
 from datetime import datetime
 
-from lib.metrics import calculate_pr_avg_diff, get_offset_events
+from lib.metrics import calculate_pr_avg_diff, get_offset_events, get_public_repositories
 
 
 class TestMetrics(TestCase):
@@ -29,6 +29,11 @@ class TestMetrics(TestCase):
                 {'id': '11', 'type': 'IssuesEvent', 'created_at': '2023-11-11T20:00:05Z'},
                 {'id': '12', 'type': 'IssuesEvent', 'created_at': '2023-11-11T20:11:05Z'},
             ],
+            'PublicEvent': [
+                {'id': '13', 'type': 'IssuesEvent', 'repo': {'name': 'publicRepo/one'}, 'created_at': '2023-11-11T20:1:05Z'},
+                {'id': '14', 'type': 'IssuesEvent', 'repo': {'name': 'publicRepo/two'}, 'created_at': '2023-11-11T20:0:05Z'},
+                {'id': '15', 'type': 'IssuesEvent', 'repo': {'name': 'publicRepo/three'}, 'created_at': '2023-11-11T19:0:05Z'},
+            ],
         }
 
     def copy_events(self):
@@ -51,6 +56,7 @@ class TestMetrics(TestCase):
                 'PullRequestEvent': ['1', '2', '3', '4', '5'],
                 'WatchEvent': ['8'],
                 'IssuesEvent': ['11', '12'],
+                'PublicEvent': ['13', '14'],
             }
 
         self.assertEqual(expected_result_ids, result_ids)
@@ -63,3 +69,7 @@ class TestMetrics(TestCase):
         fake_datetime.now.return_value = datetime(2023, 11, 11, 20, 2)
 
         self.assertEqual(self.events, get_offset_events(self.copy_events(), offset=62))
+
+    def test_get_public_repositories(self):
+        expected_result = ['publicRepo/one', 'publicRepo/two', 'publicRepo/three']
+        self.assertEqual(expected_result, get_public_repositories(self.copy_events()))
